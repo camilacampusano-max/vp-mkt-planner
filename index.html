@@ -1199,10 +1199,32 @@ function seedIfEmpty(){
 // ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
+// SYNC — lee eventos desde el Google Sheet automáticamente
+// ═══════════════════════════════════════════════════
+const SHEET_API = 'https://script.google.com/macros/s/AKfycby_ozQw41l-r2dLzUw7pCR0_VloR3VSM0DqMECGZImkTKy40TFt2FCwYjaf3R_DoUBY/exec?token=vp-sheet-2026';
+
+async function syncSheetEvents(){
+  try {
+    const res  = await fetch(SHEET_API);
+    const data = await res.json();
+    if(!data.ok || !Array.isArray(data.events)) return;
+
+    // Reemplaza eventos previos del sheet, conserva los manuales
+    const local  = loadEvents().filter(e => e.source !== 'sheet');
+    const merged = [...local, ...data.events];
+    saveEvents(merged);
+    render();
+  } catch(err){
+    console.warn('Sheet sync:', err);
+  }
+}
+
+// ═══════════════════════════════════════════════════
 seedIfEmpty();
 buildFilters();
 attachListeners();
 render();
+syncSheetEvents(); // asíncrono, no bloquea la carga
 </script>
 </body>
 </html>
