@@ -667,10 +667,11 @@ const SOCIOS = Object.values(PARTNERS).filter(p=>p.type==='socio');
 const PLIST  = Object.values(PARTNERS).filter(p=>p.type==='partner');
 
 const EVENT_TYPES = {
-  emailMkt: {label:'Email MKT', icon:'📧'},
-  blog:     {label:'Blog',      icon:'✍️'},
-  rrss:     {label:'RRSS',      icon:'📱'},
-  accion:   {label:'Acción',    icon:'⚡'},
+  emailMkt: {label:'Email MKT',  icon:'📧'},
+  blog:     {label:'Blog',       icon:'✍️'},
+  rrss:     {label:'RRSS',       icon:'📱'},
+  evento:   {label:'Evento',     icon:'📅'},
+  paidMedia:{label:'Paid Media', icon:'💰'},
 };
 
 // ── Planif. General — semanas con acción planificada por partner ──────────────
@@ -1067,7 +1068,7 @@ function openModal(defDate, defPid){
   document.getElementById('fieldDesc').value='';
   document.getElementById('deleteBtn').classList.add('hidden');
   buildPSG(defPid||state.selectedPartnerId||'');
-  buildTC('emailMkt');
+  buildTC('rrss');
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
 function openEditModal(eid){
@@ -1212,7 +1213,7 @@ function sheetUrl(action, ev){
     +'&date='+encodeURIComponent(ev.date)
     +'&title='+encodeURIComponent(ev.title);
 }
-const SHEET_TYPES=['emailMkt','blog','rrss','accion'];
+const SHEET_TYPES=['emailMkt','blog','rrss','evento','paidMedia'];
 async function pushEventToSheet(ev){
   if(!ev.partnerId||!ev.type||!ev.date||!ev.title) return;
   if(!SHEET_TYPES.includes(ev.type)) return;
