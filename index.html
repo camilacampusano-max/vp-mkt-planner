@@ -667,7 +667,6 @@ const SOCIOS = Object.values(PARTNERS).filter(p=>p.type==='socio');
 const PLIST  = Object.values(PARTNERS).filter(p=>p.type==='partner');
 
 const EVENT_TYPES = {
-  reunion:  {label:'Reunión',   icon:'🤝'},
   emailMkt: {label:'Email MKT', icon:'📧'},
   blog:     {label:'Blog',      icon:'✍️'},
   rrss:     {label:'RRSS',      icon:'📱'},
@@ -1068,7 +1067,7 @@ function openModal(defDate, defPid){
   document.getElementById('fieldDesc').value='';
   document.getElementById('deleteBtn').classList.add('hidden');
   buildPSG(defPid||state.selectedPartnerId||'');
-  buildTC('reunion');
+  buildTC('emailMkt');
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
 function openEditModal(eid){
@@ -1213,7 +1212,7 @@ function sheetUrl(action, ev){
     +'&date='+encodeURIComponent(ev.date)
     +'&title='+encodeURIComponent(ev.title);
 }
-const SHEET_TYPES=['emailMkt','blog','rrss','evento','paidMedia'];
+const SHEET_TYPES=['emailMkt','blog','rrss','accion'];
 async function pushEventToSheet(ev){
   if(!ev.partnerId||!ev.type||!ev.date||!ev.title) return;
   if(!SHEET_TYPES.includes(ev.type)) return;
