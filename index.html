@@ -1134,8 +1134,10 @@ function attachListeners(){
 
   document.getElementById('deleteBtn').addEventListener('click',()=>{
     if(!_editId||!confirm('¿Eliminar esta acción?')) return;
+    const evToDel=loadEvents().find(e=>e.id===_editId);
     removeEvent(_editId); _editId=null; closeModal();
     state.selectedEventId=null; render();
+    if(evToDel) pushDeleteToSheet(evToDel);
   });
 }
 
@@ -1204,18 +1206,23 @@ function seedIfEmpty(){
 // ═══════════════════════════════════════════════════
 const SHEET_API = 'https://script.google.com/macros/s/AKfycbwL-rTIsnoQIEgIm4y5M4KMaNgOx4g6p6RpIkbIcUPPZ2ipC6cjSoDCIBCWeHQTv7jm/exec?token=vp-sheet-2026';
 
+function sheetUrl(action, ev){
+  return SHEET_API+'&action='+action
+    +'&partnerId='+encodeURIComponent(ev.partnerId)
+    +'&type='+encodeURIComponent(ev.type)
+    +'&date='+encodeURIComponent(ev.date)
+    +'&title='+encodeURIComponent(ev.title);
+}
+const SHEET_TYPES=['emailMkt','blog','rrss','evento','paidMedia'];
 async function pushEventToSheet(ev){
-  const sheetTypes=['emailMkt','blog','rrss','evento','paidMedia'];
   if(!ev.partnerId||!ev.type||!ev.date||!ev.title) return;
-  if(!sheetTypes.includes(ev.type)) return;
-  try{
-    const url=SHEET_API+'&action=write'
-      +'&partnerId='+encodeURIComponent(ev.partnerId)
-      +'&type='+encodeURIComponent(ev.type)
-      +'&date='+encodeURIComponent(ev.date)
-      +'&title='+encodeURIComponent(ev.title);
-    await fetch(url);
-  }catch(err){console.warn('Push to sheet failed:',err);}
+  if(!SHEET_TYPES.includes(ev.type)) return;
+  try{ await fetch(sheetUrl('write',ev)); }catch(err){console.warn('Push to sheet failed:',err);}
+}
+async function pushDeleteToSheet(ev){
+  if(!ev.partnerId||!ev.type||!ev.date||!ev.title) return;
+  if(!SHEET_TYPES.includes(ev.type)) return;
+  try{ await fetch(sheetUrl('delete',ev)); }catch(err){console.warn('Delete from sheet failed:',err);}
 }
 
 async function syncSheetEvents(){
