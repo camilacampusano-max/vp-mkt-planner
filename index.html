@@ -667,11 +667,12 @@ const SOCIOS = Object.values(PARTNERS).filter(p=>p.type==='socio');
 const PLIST  = Object.values(PARTNERS).filter(p=>p.type==='partner');
 
 const EVENT_TYPES = {
-  emailMkt: {label:'Email MKT',  icon:'📧'},
-  blog:     {label:'Blog',       icon:'✍️'},
-  rrss:     {label:'RRSS',       icon:'📱'},
-  evento:   {label:'Evento',     icon:'📅'},
-  paidMedia:{label:'Paid Media', icon:'💰'},
+  emailMkt:  {label:'Email MKT',    icon:'📧'},
+  blog:      {label:'Blog',         icon:'✍️'},
+  rrss:      {label:'RRSS',         icon:'📱'},
+  evento:    {label:'Evento',       icon:'📅'},
+  paidMedia: {label:'Paid Media',   icon:'💰'},
+  voceriaPR: {label:'Vocerías/PR',  icon:'🎤'},
 };
 
 // ── Planif. General — semanas con acción planificada por partner ──────────────
@@ -1213,7 +1214,7 @@ function sheetUrl(action, ev){
     +'&date='+encodeURIComponent(ev.date)
     +'&title='+encodeURIComponent(ev.title);
 }
-const SHEET_TYPES=['emailMkt','blog','rrss','evento','paidMedia'];
+const SHEET_TYPES=['emailMkt','blog','rrss','evento','paidMedia','voceriaPR'];
 async function pushEventToSheet(ev){
   if(!ev.partnerId||!ev.type||!ev.date||!ev.title) return;
   if(!SHEET_TYPES.includes(ev.type)) return;
