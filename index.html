@@ -1246,7 +1246,11 @@ seedIfEmpty();
 buildFilters();
 attachListeners();
 render();
-syncSheetEvents(); // asíncrono, no bloquea la carga
+syncSheetEvents();
+
+// Re-sincroniza al volver a la pestaña y cada 2 minutos
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') syncSheetEvents(); });
+setInterval(syncSheetEvents, 120000);
 </script>
 </body>
 </html>
