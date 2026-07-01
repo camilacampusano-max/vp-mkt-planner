@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MKT Planner — Valor Pyme</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F3F5F9;
+      --surface: #FFFFFF;
+      --border: #E4E8F0;
+      --text: #111827;
+      --text-muted: #6B7280;
+      --accent: #2563EB;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+      --shadow: 0 4px 16px rgba(0,0,0,.10);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── TOPBAR ─────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      padding: 0 20px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, #1A237E 0%, #0051A5 50%, #7B2FBE 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 800; font-size: 13px; letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+    .brand-text strong { font-size: 14px; font-weight: 700; display: block; line-height: 1.1; }
+    .brand-text span { font-size: 11px; color: var(--text-muted); }
+    .topbar-center { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: center; }
+    .period-title { font-size: 15px; font-weight: 600; min-width: 200px; text-align: center; }
+    .nav-btn {
+      width: 30px; height: 30px; border: 1.5px solid var(--border);
+      background: white; border-radius: 8px; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; color: var(--text);
+    }
+    .nav-btn:hover { background: var(--bg); border-color: #aaa; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .view-toggle {
+      display: flex; background: var(--bg); border-radius: 8px; padding: 3px; gap: 2px;
+    }
+    .view-btn {
+      padding: 5px 12px; border: none; border-radius: 6px; background: transparent;
+      cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text-muted);
+      transition: all .15s; font-family: inherit;
+    }
+    .view-btn.active { background: white; color: var(--text); box-shadow: var(--shadow-sm); }
+    .add-btn {
+      padding: 7px 14px; background: var(--accent); color: white; border: none;
+      border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
+      transition: opacity .15s; font-family: inherit; white-space: nowrap;
+    }
+    .add-btn:hover { opacity: .85; }
+
+    /* ─── FILTER BAR ─────────────────── */
+    .filter-bar {
+      display: flex; align-items: center; gap: 5px;
+      padding: 7px 20px; background: white; border-bottom: 1px solid var(--border);
+      overflow-x: auto; flex-shrink: 0;
+    }
+    .filter-bar::-webkit-scrollbar { height: 0; }
+    .filter-label {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; margin-right: 2px;
+    }
+    .filter-pill {
+      padding: 3px 11px; border-radius: 100px; border: 1.5px solid;
+      background: transparent; cursor: pointer; font-size: 11px; font-weight: 500;
+      white-space: nowrap; transition: all .15s; font-family: inherit; flex-shrink: 0;
+    }
+    .filter-pill:hover { opacity: .8; }
+    .filter-pill.active { color: white !important; }
+    .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
+
+    /* ─── MAIN LAYOUT ────────────────── */
+    .main-layout { display: flex; flex: 1; overflow: hidden; }
+    .calendar-area { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .calendar-area::-webkit-scrollbar { width: 5px; }
+    .calendar-area::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+    /* ─── WEEKLY VIEW ────────────────── */
+    .week-summary {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;
+    }
+    .week-summary-label { font-size: 11px; color: var(--text-muted); }
+    .wsc {
+      display: flex; align-items: center; gap: 4px; padding: 3px 9px;
+      border-radius: 100px; font-size: 11px; font-weight: 600;
+      background: var(--p-bg, #f0f0f0); color: var(--p-color, #666);
+    }
+    .wsc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--p-color, #ccc); }
+
+    /* Plan marks strip */
+    .plan-bar {
+      display: flex; align-items: center; gap: 5px; margin-bottom: 14px; flex-wrap: wrap;
+      padding: 6px 10px; background: #F8F9FB; border-radius: 8px;
+      border: 1px dashed var(--border);
+    }
+    .plan-bar-label {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; margin-right: 2px;
+    }
+    .plan-chip {
+      display: flex; align-items: center; gap: 3px; padding: 2px 8px;
+      border-radius: 100px; font-size: 10px; font-weight: 600;
+      color: var(--p-color); border: 1.5px dashed var(--p-color);
+      background: var(--p-bg); opacity: .75;
+    }
+    .plan-chip-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--p-color); opacity: .6; }
+
+    /* Month pill plan variant */
+    .month-pill-plan {
+      opacity: .5; border-left-style: dashed; font-size: 9px; padding: 1px 4px;
+    }
+
+    .week-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: start; }
+    .day-col { display: flex; flex-direction: column; gap: 6px; }
+    .day-header {
+      text-align: center; padding: 8px 4px 7px;
+      border-bottom: 2px solid var(--border); margin-bottom: 2px;
+    }
+    .day-name {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+    .day-num-wrap {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 50%; margin: 3px auto;
+    }
+    .day-num-wrap.today { background: var(--accent); }
+    .day-num { font-size: 17px; font-weight: 700; color: var(--text); }
+    .day-num-wrap.today .day-num { color: white; }
+
+    .event-card {
+      background: var(--p-bg, #f5f5f5); border-left: 3px solid var(--p-color, #ccc);
+      border-radius: 8px; padding: 8px 10px; cursor: pointer;
+      transition: transform .12s, box-shadow .12s; position: relative;
+    }
+    .event-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    .event-card.selected { outline: 2px solid var(--p-color, #ccc); outline-offset: 1px; }
+    .ec-partner { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+    .ec-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--p-color, #ccc); flex-shrink: 0; }
+    .ec-partner-name { font-size: 10px; font-weight: 700; color: var(--p-color, #999); text-transform: uppercase; letter-spacing: .04em; }
+    .ec-type { font-size: 9px; background: rgba(0,0,0,.07); border-radius: 4px; padding: 1px 5px; margin-left: auto; color: var(--text-muted); white-space: nowrap; }
+    .ec-title { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.3; }
+
+    .day-add-btn {
+      width: 100%; padding: 6px; border: 1.5px dashed var(--border);
+      background: transparent; border-radius: 8px; cursor: pointer;
+      color: var(--text-muted); font-size: 11px; transition: all .15s; font-family: inherit;
+    }
+    .day-add-btn:hover { border-color: #9ca3af; color: var(--text); background: white; }
+
+    /* ─── MONTHLY VIEW ───────────────── */
+    .calendar-area.month-view {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 20px;
+    }
+    .month-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .month-header-row {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px;
+      flex-shrink: 0; margin-bottom: 4px;
+    }
+    .month-day-label {
+      text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted);
+      padding: 5px; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .month-body { flex: 1; display: flex; flex-direction: column; gap: 3px; min-height: 0; }
+    .week-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; flex: 1; min-height: 0; }
+    .month-cell {
+      background: white; border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px; cursor: pointer; transition: box-shadow .15s;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .month-cell:hover { box-shadow: var(--shadow); }
+    .month-cell.today { border-color: var(--accent); border-width: 2px; }
+    .month-cell.other-month { opacity: .18; pointer-events: none; }
+    .month-cell-num { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; flex-shrink: 0; }
+    .month-cell.today .month-cell-num { color: var(--accent); }
+    .month-pill {
+      font-size: 10px; padding: 2px 5px; border-radius: 4px; margin-bottom: 2px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+      border-left: 2px solid var(--p-color, #ccc); background: var(--p-bg, #f5f5f5);
+      color: var(--p-color, #666); font-weight: 500; display: block; flex-shrink: 0;
+    }
+    .month-more { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+    /* ─── PARTNER PANEL ──────────────── */
+    .partner-panel {
+      width: 290px; border-left: 1px solid var(--border);
+      background: white; overflow-y: auto; flex-shrink: 0;
+    }
+    .partner-panel.hidden { display: none; }
+    .partner-panel::-webkit-scrollbar { width: 4px; }
+    .partner-panel::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 2px; }
+
+    .pp-header {
+      padding: 18px 18px 16px; position: sticky; top: 0; z-index: 2;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .pp-header-top { display: flex; align-items: flex-start; justify-content: space-between; }
+    .pp-close {
+      width: 24px; height: 24px; border: none; background: rgba(255,255,255,.22);
+      border-radius: 50%; cursor: pointer; font-size: 12px;
+      display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;
+    }
+    .pp-type-badge {
+      font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em;
+      background: rgba(255,255,255,.2); color: white; padding: 2px 7px;
+      border-radius: 100px; display: inline-block;
+    }
+    .pp-name { font-size: 20px; font-weight: 800; color: white; line-height: 1.1; }
+
+    .pp-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .pp-section:last-child { border-bottom: none; }
+    .pp-section-title {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .09em; color: var(--text-muted); margin-bottom: 10px;
+    }
+    .pp-empty { font-size: 11px; color: var(--text-muted); text-align: center; padding: 8px 0; font-style: italic; }
+
+    /* Channels */
+    .channels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .channel-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 8px 4px; border-radius: 8px; border: 1.5px solid var(--border); opacity: .3;
+    }
+    .channel-item.on { border-color: var(--p-color); background: var(--p-bg); opacity: 1; }
+    .channel-icon { font-size: 16px; }
+    .channel-label { font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; text-align: center; }
+    .channel-item.on .channel-label { color: var(--p-color); }
+    .channel-extra {
+      margin-top: 8px; font-size: 11px; color: var(--text-muted);
+      background: var(--bg); border-radius: 6px; padding: 6px 9px; line-height: 1.5;
+    }
+
+    /* Contacts */
+    .contact-item { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 9px; }
+    .contact-item:last-child { margin-bottom: 0; }
+    .contact-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: white; flex-shrink: 0;
+    }
+    .contact-info { flex: 1; min-width: 0; }
+    .contact-name { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .contact-role { font-size: 10px; color: var(--text-muted); line-height: 1.3; }
+    .contact-email { font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Solutions */
+    .solution-item {
+      display: flex; align-items: center; gap: 7px; padding: 5px 8px;
+      border-radius: 6px; background: var(--bg); margin-bottom: 4px; font-size: 11px;
+    }
+    .solution-ruta {
+      font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      color: var(--p-color); background: var(--p-bg); padding: 2px 6px; border-radius: 4px; white-space: nowrap;
+    }
+
+    /* Week events in panel */
+    .wei {
+      display: flex; align-items: flex-start; gap: 7px; padding: 7px 9px;
+      border-radius: 8px; background: var(--p-bg); border-left: 3px solid var(--p-color);
+      margin-bottom: 5px; cursor: pointer;
+    }
+    .wei:hover { opacity: .8; }
+    .wei-date { font-size: 10px; font-weight: 700; color: var(--text-muted); white-space: nowrap; min-width: 28px; }
+    .wei-type { font-size: 10px; color: var(--text-muted); }
+    .wei-title { font-size: 11px; font-weight: 500; }
+
+    .pp-add-btn {
+      width: 100%; padding: 6px; border: 1.5px dashed var(--border);
+      background: transparent; border-radius: 8px; cursor: pointer;
+      color: var(--text-muted); font-size: 11px; transition: all .15s;
+      font-family: inherit; margin-top: 6px;
+    }
+    .pp-add-btn:hover { border-color: #9ca3af; color: var(--text); background: white; }
+
+    /* ─── MODAL ──────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center; z-index: 200;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: white; border-radius: 16px; padding: 24px;
+      width: 480px; max-width: 96vw; box-shadow: 0 24px 60px rgba(0,0,0,.2);
+      max-height: 92vh; overflow-y: auto;
+    }
+    .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; align-items: center; }
+    .modal-cancel {
+      padding: 8px 16px; border: 1.5px solid var(--border); background: white;
+      border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 500; font-family: inherit;
+    }
+    .modal-save {
+      padding: 8px 18px; background: var(--accent); color: white; border: none;
+      border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit;
+    }
+    .modal-save:hover { opacity: .85; }
+    .modal-delete {
+      padding: 8px 12px; background: #FEE2E2; color: #DC2626; border: none;
+      border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
+      font-family: inherit; margin-right: auto;
+    }
+
+    .form-row { margin-bottom: 12px; }
+    .form-row label {
+      display: block; font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px;
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%; padding: 8px 11px; border: 1.5px solid var(--border);
+      border-radius: 8px; font-family: inherit; font-size: 13px; color: var(--text);
+      outline: none; background: white; transition: border-color .15s;
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); }
+    .form-row textarea { resize: vertical; min-height: 65px; }
+    .form-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .partner-select-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; max-height: 180px; overflow-y: auto; }
+    .pso {
+      display: flex; align-items: center; gap: 7px; padding: 7px 9px;
+      border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .12s;
+    }
+    .pso.selected { border-color: var(--p-color); background: var(--p-bg); }
+    .pso-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .pso-name { font-size: 11px; font-weight: 600; }
+    .pso-type { font-size: 9px; color: var(--text-muted); }
+
+    .type-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .type-chip {
+      padding: 5px 11px; border: 1.5px solid var(--border); border-radius: 100px;
+      cursor: pointer; font-size: 11px; font-weight: 500; transition: all .12s;
+      font-family: inherit; background: white;
+    }
+    .type-chip.selected { border-color: var(--accent); background: var(--accent); color: white; }
+
+    .hidden { display: none !important; }
+    * { scrollbar-width: thin; scrollbar-color: #ddd transparent; }
+
+    /* ─── LOCK SCREEN ─────────────────── */
+    #lockScreen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(135deg, #0f1c4d 0%, #1a3a8f 50%, #4c1d8f 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .lock-card {
+      background: white; border-radius: 20px;
+      padding: 44px 40px; width: 360px; max-width: 90vw;
+      text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.3);
+    }
+    .lock-logo {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, #1A237E 0%, #0051A5 50%, #7B2FBE 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 800; font-size: 18px; letter-spacing: -0.5px;
+      margin: 0 auto 16px;
+    }
+    .lock-title { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 4px; }
+    .lock-sub { font-size: 13px; color: #6B7280; margin-bottom: 28px; }
+    .lock-input {
+      width: 100%; border: 1.5px solid #E4E8F0; border-radius: 10px;
+      padding: 11px 14px; font-size: 15px; font-family: inherit;
+      outline: none; transition: border-color .15s; margin-bottom: 12px;
+      text-align: center; letter-spacing: 2px;
+    }
+    .lock-input:focus { border-color: #2563EB; }
+    .lock-input.shake {
+      animation: shake .35s ease;
+      border-color: #EF4444;
+    }
+    .lock-btn {
+      width: 100%; background: linear-gradient(135deg, #1A237E, #2563EB);
+      color: white; border: none; border-radius: 10px;
+      padding: 12px; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: opacity .15s;
+    }
+    .lock-btn:hover { opacity: .9; }
+    .lock-error {
+      font-size: 12px; color: #EF4444; margin-top: 10px;
+      min-height: 18px; transition: opacity .2s;
+    }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-6px)}
+      40%{transform:translateX(6px)}
+      60%{transform:translateX(-4px)}
+      80%{transform:translateX(4px)}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOCK SCREEN ───────────────────────────────── -->
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-logo">VP</div>
+    <div class="lock-title">MKT Planner</div>
+    <div class="lock-sub">Valor Pyme — S2 2026</div>
+    <input id="lockInput" class="lock-input" type="password" placeholder="Clave de acceso" autocomplete="current-password">
+    <button class="lock-btn" id="lockBtn">Ingresar</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">VP</div>
+    <div class="brand-text">
+      <strong>Valor Pyme</strong>
+      <span>MKT Planner</span>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <button id="prevBtn" class="nav-btn">&#8592;</button>
+    <span id="periodTitle" class="period-title"></span>
+    <button id="nextBtn" class="nav-btn">&#8594;</button>
+  </div>
+  <div class="topbar-right">
+    <div class="view-toggle">
+      <button id="weekBtn" class="view-btn">Semanal</button>
+      <button id="monthBtn" class="view-btn active">Mensual</button>
+    </div>
+    <button id="addEventBtn" class="add-btn">+ Agregar</button>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <span class="filter-label">Ver:</span>
+  <button class="filter-pill active" data-id="all" style="border-color:#6B7280;color:#374151">Todos</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">Socios</span>
+  <div id="filterSocios" style="display:contents"></div>
+  <div class="filter-sep"></div>
+  <span class="filter-label">Partners</span>
+  <div id="filterPartners" style="display:contents"></div>
+</div>
+
+<div class="main-layout">
+  <div class="calendar-area" id="calendarArea"></div>
+  <aside class="partner-panel hidden" id="partnerPanel"></aside>
+</div>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">Nueva acción</div>
+    <input type="hidden" id="editId">
+    <div class="form-row">
+      <label>Socio / Partner</label>
+      <div class="partner-select-grid" id="partnerSelectGrid"></div>
+    </div>
+    <div class="form-two">
+      <div class="form-row">
+        <label>Fecha</label>
+        <input type="date" id="fieldDate">
+      </div>
+      <div class="form-row">
+        <label>Tipo de acción</label>
+        <div class="type-chips" id="typeChips"></div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Título</label>
+      <input type="text" id="fieldTitle" placeholder="Ej: Reunión bisemanal, Post IG lanzamiento…">
+    </div>
+    <div class="form-row">
+      <label>Descripción (opcional)</label>
+      <textarea id="fieldDesc" placeholder="Detalles, notas, links…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-delete hidden" id="deleteBtn">Eliminar</button>
+      <button class="modal-cancel" id="cancelBtn">Cancelar</button>
+      <button class="modal-save" id="saveBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// AUTH — lock screen (una sola vez por dispositivo)
+// ═══════════════════════════════════════════════════
+const AUTH_KEY  = 'vp-auth-v1';
+const APP_PASS  = 'valorpyme2026'; // ← cambia esta clave cuando quieras
+
+(function initAuth(){
+  const lock  = document.getElementById('lockScreen');
+  const input = document.getElementById('lockInput');
+  const btn   = document.getElementById('lockBtn');
+  const err   = document.getElementById('lockError');
+
+  if(localStorage.getItem(AUTH_KEY) === 'ok'){
+    lock.style.display = 'none';
+    return;
+  }
+
+  function tryUnlock(){
+    if(input.value === APP_PASS){
+      localStorage.setItem(AUTH_KEY,'ok');
+      lock.style.display = 'none';
+    } else {
+      input.classList.remove('shake');
+      void input.offsetWidth; // reflow para reiniciar animación
+      input.classList.add('shake');
+      err.textContent = 'Clave incorrecta, intenta de nuevo';
+      input.value = '';
+      input.focus();
+      setTimeout(()=>{ input.classList.remove('shake'); err.textContent=''; }, 2000);
+    }
+  }
+
+  btn.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+  input.focus();
+})();
+
+// ═══════════════════════════════════════════════════
+// DATOS
+// ═══════════════════════════════════════════════════
+const PARTNERS = {
+  bci:{id:'bci',name:'BCI',type:'socio',color:'#0051A5',bg:'#EBF3FF',
+    channels:{instagram:false,facebook:false,linkedin:false,email:true,tiktok:false,whatsapp:false,speakers:false,other:'Página web / Blog'},
+    mktContacts:[
+      {name:'Macarena Figueroa',role:'Asesor Comunicaciones Corporativas',email:'macarena.figueroa@bci.cl'},
+      {name:'Constanza Rubilar',role:'Social Media Specialist Senior',email:'constanza.rubilar@bci.cl'},
+      {name:'Violeta Gaete',role:'Segment Strategist',email:'violeta.gaete@bci.cl'},
+    ],
+    soluciones:[{ruta:'Capital',name:'Cuenta Digital Bci Pyme'},{ruta:'Capital',name:'Banca Nace'}]},
+
+  blueExpress:{id:'blueExpress',name:'Blue Express',type:'socio',color:'#E8500A',bg:'#FFF2ED',
+    channels:{instagram:true,facebook:false,linkedin:true,email:true,tiktok:false,whatsapp:false,speakers:true,speakerNote:'Vocerías disponibles'},
+    mktContacts:[
+      {name:'María José Gaete',role:'Subgerente de Marketing',email:'maria.gaete@bx.cl'},
+      {name:'Valentina Galindo',role:'Jefa de Comunicaciones',email:'valentina.galindo@blue.cl'},
+      {name:'Antonia Muñoz',role:'Analista de Comunicaciones',email:'antonia.munoz@blue.cl'},
+    ],
+    soluciones:[{ruta:'Mercado',name:'Blue Express Cupón Dcto'}]},
+
+  defontana:{id:'defontana',name:'Defontana',type:'socio',color:'#1AA65A',bg:'#EDFAF4',
+    channels:{instagram:true,facebook:true,linkedin:true,email:true,tiktok:true,whatsapp:false,speakers:false},
+    mktContacts:[
+      {name:'Exequiel Zapata',role:'Social Media Manager / Líder Estrategia Digital',email:'ezapata@defontana.com'},
+    ],
+    soluciones:[{ruta:'Digitalización',name:'Defontana Digital'},{ruta:'Digitalización',name:'Contabilidad Gratuita DF + MGN'}]},
+
+  microsoft:{id:'microsoft',name:'Microsoft',type:'socio',color:'#00A4EF',bg:'#E8F7FE',
+    channels:{instagram:false,facebook:false,linkedin:false,email:false,tiktok:false,whatsapp:false,speakers:false},
+    mktContacts:[
+      {name:'Francisco Milad',role:'Senior Account Executive Financial Services',email:'fmilad@microsoft.com'},
+      {name:'Seidy Pinzón',role:'Program and Alliances Owner',email:'v-spinzon@microsoft.com'},
+    ],
+    soluciones:[{ruta:'Gestión y Talento',name:'Elevate Microsoft'},{ruta:'Gestión y Talento',name:'Ciberseguridad Microsoft'}]},
+
+  multigremial:{id:'multigremial',name:'Multigremial',type:'socio',color:'#7B2FBE',bg:'#F5EFFF',
+    channels:{instagram:true,facebook:true,linkedin:true,email:true,tiktok:false,whatsapp:true,whatsappNote:'Grupos WhatsApp con dirigentes gremiales',speakers:false},
+    mktContacts:[
+      {name:'Jorge Ahués',role:'Director de Comunicaciones',email:'jahues@multigremialnacional.cl'},
+      {name:'Andrés Machiavello',role:'Jefe de Vinculación Gremial',email:'andres@multigremialnacional.cl'},
+    ],
+    soluciones:[{ruta:'Digitalización',name:'Contabilidad Gratuita DF + MGN'},{ruta:'Gestión y Talento',name:'Academia Emprendedores MGN'}]},
+
+  otic:{id:'otic',name:'OTIC CChC',type:'socio',color:'#C0392B',bg:'#FDEDEC',
+    channels:{instagram:true,facebook:false,linkedin:true,email:false,tiktok:false,whatsapp:false,speakers:true,speakerNote:'Vocerías disponibles'},
+    mktContacts:[
+      {name:'Mónica Jarrín',role:'Jefa de Marketing',email:'mjarrin@ccc.cl'},
+      {name:'Paula Ríos',role:'Subgerente MKT y Comunicaciones',email:'prios@ccc.cl'},
+      {name:'Felipe Pérez',role:'Jefe de Comunicaciones',email:'fperez@ccc.cl'},
+      {name:'Fernanda Fahrenkrog',role:'Periodista',email:'mfahrenkrog@ccc.cl'},
+    ],
+    soluciones:[{ruta:'Gestión y Talento',name:'Programa Educación Financiera'}]},
+
+  pymeUC:{id:'pymeUC',name:'Pyme UC',type:'socio',color:'#1A237E',bg:'#EAECFB',
+    channels:{instagram:false,facebook:false,linkedin:false,email:true,tiktok:false,whatsapp:false,speakers:false},
+    mktContacts:[
+      {name:'Carolina García Chevesich',role:'Subdirectora Pyme UC',email:'cgarciach@uc.cl'},
+      {name:'Teresita Undurraga',role:'Coordinadora de Proyectos',email:'tundurragv@uc.cl'},
+      {name:'Natalia Valenzuela',role:'Subdirectora de Comunicaciones',email:'nvalenzuelg@uc.cl'},
+    ],
+    soluciones:[{ruta:'Gestión y Talento',name:'Academia Pyme'},{ruta:'Gestión y Talento',name:'Consultoría MBA'},{ruta:'Gestión y Talento',name:'Pyme UC'}]},
+
+  walmart:{id:'walmart',name:'Walmart',type:'socio',color:'#007DC6',bg:'#E8F4FC',
+    channels:{instagram:true,facebook:true,linkedin:false,email:false,tiktok:true,tiktokNote:'Según contenido',whatsapp:false,speakers:false},
+    mktContacts:[
+      {name:'Karen Puchi',role:'Subgerente de Comunicaciones Externas',email:'karen.puchi@walmart.com'},
+      {name:'Sebastián Nadales',role:'Subgerente Operaciones Digitales Marketplace',email:'sebastian.Nadales@walmart.com'},
+    ],
+    soluciones:[{ruta:'Mercado',name:'Walmart Marketplace'}]},
+
+  buk:{id:'buk',name:'BUK',type:'partner',color:'#D81B60',bg:'#FDEAF5',
+    channels:{instagram:false,facebook:false,linkedin:false,email:true,tiktok:false,whatsapp:false,speakers:true,speakerNote:'Vocerías disponibles',other:'Página web / Blog'},
+    mktContacts:[
+      {name:'Isidora Carmona',role:'Partnership Specialist',email:'icarmona@buk.cl'},
+      {name:'Magdalena Rosende',role:'Partnerships Lead',email:'mrosende@buk.cl'},
+    ],
+    soluciones:[{ruta:'Digitalización',name:'Buk Starter'}]},
+
+  cobranzaOnline:{id:'cobranzaOnline',name:'Cobranza Online',type:'partner',color:'#00838F',bg:'#E0F7FA',
+    channels:{instagram:true,facebook:true,linkedin:true,email:true,tiktok:false,whatsapp:false,speakers:false,other:'Blog'},
+    mktContacts:[{name:'Belén Sanguinetti',role:'Cofundadora y CRO',email:'bsanguinetti@cobranzaonline.com'}],
+    soluciones:[{ruta:'Capital',name:'Cobranza Online'}]},
+
+  fintegram:{id:'fintegram',name:'Fintegram',type:'partner',color:'#558B2F',bg:'#F2F8E8',
+    channels:{instagram:true,facebook:true,linkedin:true,email:true,tiktok:false,whatsapp:false,speakers:false,other:'Web / Youtube'},
+    mktContacts:[
+      {name:'Nicolás Ibaibarriaga',role:'Co Founder y CEO',email:'nicolas@fintegram.com'},
+      {name:'Mauricio Benítez',role:'Co Founder y CSO',email:'mauricio@fintegram.com'},
+    ],
+    soluciones:[{ruta:'Capital',name:'Scoring Fintegram'}]},
+
+  kuad:{id:'kuad',name:'Kuad System',type:'partner',color:'#E65100',bg:'#FFF4E5',
+    channels:{instagram:true,facebook:false,linkedin:true,email:true,tiktok:false,whatsapp:false,speakers:false,other:'Página Web / Blog'},
+    mktContacts:[
+      {name:'Maia Cordero',role:'CEO',email:'mai@kubeymachine.com'},
+      {name:'Gustavo Altieri',role:'COO',email:'gustavo@kubeymachine.com'},
+    ],
+    soluciones:[{ruta:'Mercado',name:'Plan Integral KUAD System'},{ruta:'Digitalización',name:'Web profesional KUAD System'}]},
+
+  kalamar:{id:'kalamar',name:'Kalamar',type:'partner',color:'#3949AB',bg:'#EEF0FB',
+    channels:{instagram:false,facebook:false,linkedin:false,email:false,tiktok:false,whatsapp:false,speakers:true},
+    mktContacts:[
+      {name:'Carlos Cuevas',role:'CEO',email:'marketing@kalamar.digital'},
+      {name:'Andrea Cisternas',role:'Customer Success',email:'andrea@kalamar.digital'},
+    ],
+    soluciones:[{ruta:'Digitalización',name:'Mkt Digital AI de Kalamar'}]},
+
+  rindegastos:{id:'rindegastos',name:'Rindegastos',type:'partner',color:'#00695C',bg:'#E0F2F1',
+    channels:{instagram:true,facebook:true,linkedin:true,email:false,tiktok:false,whatsapp:false,speakers:false,other:'Youtube'},
+    mktContacts:[{name:'Valeria De Andrade',role:'Strategic Partnership Specialist',email:'valeria.deandrade@rindegastos.com'}],
+    soluciones:[{ruta:'Digitalización',name:'Rindegastos'}]},
+
+  omia:{id:'omia',name:'OMIA',type:'partner',color:'#546E7A',bg:'#ECEFF1',
+    channels:{instagram:false,facebook:false,linkedin:false,email:false,tiktok:false,whatsapp:false,speakers:false},
+    mktContacts:[],soluciones:[{ruta:'Digitalización',name:'OMIA de Organizame'}]},
+
+  misAbogados:{id:'misAbogados',name:'MisAbogados',type:'partner',color:'#6D4C41',bg:'#F5F0EE',
+    channels:{instagram:false,facebook:false,linkedin:false,email:false,tiktok:false,whatsapp:false,speakers:false},
+    mktContacts:[],soluciones:[]},
+};
+
+const SOCIOS = Object.values(PARTNERS).filter(p=>p.type==='socio');
+const PLIST  = Object.values(PARTNERS).filter(p=>p.type==='partner');
+
+const EVENT_TYPES = {
+  reunion:  {label:'Reunión',   icon:'🤝'},
+  emailMkt: {label:'Email MKT', icon:'📧'},
+  blog:     {label:'Blog',      icon:'✍️'},
+  rrss:     {label:'RRSS',      icon:'📱'},
+  accion:   {label:'Acción',    icon:'⚡'},
+};
+
+// ── Planif. General — semanas con acción planificada por partner ──────────────
+// Lunes de S2 2026. Jul: 06-29,07-06,07-13,07-20 | Ago: 08-03,08-10,08-17,08-24
+// Sep: 09-07,09-14,09-21,09-28 | Oct: 10-05,10-12,10-19,10-26
+// Nov: 11-02,11-09,11-16,11-23 | Dic: 11-30,12-07,12-14,12-21
+const _JUL=['2026-06-29','2026-07-06','2026-07-13','2026-07-20'];
+const _AGO=['2026-08-03','2026-08-10','2026-08-17','2026-08-24'];
+const _SEP=['2026-09-07','2026-09-14','2026-09-21','2026-09-28'];
+const _OCT=['2026-10-05','2026-10-12','2026-10-19','2026-10-26'];
+const _NOV=['2026-11-02','2026-11-09','2026-11-16','2026-11-23'];
+const _DIC=['2026-11-30','2026-12-07','2026-12-14','2026-12-21'];
+
+const PLAN_MARKS = {
+  // Socios — activos todo el semestre
+  bci:          [..._JUL,..._AGO,..._SEP,..._OCT,..._NOV,..._DIC],
+  blueExpress:  [..._JUL,..._AGO,..._SEP,..._NOV],
+  defontana:    [..._JUL,..._AGO,..._SEP,..._OCT,..._NOV],
+  microsoft:    [..._JUL,..._AGO,..._SEP,..._OCT,..._NOV,..._DIC],
+  multigremial: [..._JUL,..._AGO,..._SEP,..._OCT,..._NOV,..._DIC],
+  otic:         [..._AGO,..._SEP,..._NOV,..._DIC],
+  pymeUC:       [..._JUL,..._AGO,..._SEP,..._OCT,..._NOV,..._DIC],
+  walmart:      [..._JUL,..._AGO,..._SEP,..._OCT,..._DIC],
+  // Partners
+  buk:          [..._JUL,..._AGO,..._OCT,..._NOV],
+  cobranzaOnline:[..._JUL,..._AGO,..._OCT,..._NOV,..._DIC],
+  fintegram:    [..._JUL,..._AGO,..._SEP,..._OCT,..._NOV],
+  kuad:         [..._JUL,..._AGO,..._SEP,..._OCT,..._NOV,..._DIC],
+  kalamar:      [..._JUL,..._AGO,..._OCT,..._NOV],
+  rindegastos:  [..._JUL,..._AGO,..._SEP,..._OCT,..._NOV],
+  omia:         [..._JUL,..._AGO,..._OCT,..._NOV],
+  misAbogados:  [..._JUL,..._AGO],
+};
+
+function getWeekPlanPids(mondayDate){
+  const ms=dStr(mondayDate);
+  return Object.entries(PLAN_MARKS)
+    .filter(([,dates])=>dates.includes(ms))
+    .map(([pid])=>pid)
+    .filter(pid=>PARTNERS[pid]);
+}
+
+const DAY_NAMES   = ['Lun','Mar','Mié','Jue','Vie'];
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const LS_KEY = 'vp-mkt-events-v2';
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+function getMonday(d){
+  const dt=new Date(d), day=dt.getDay(), diff=day===0?-6:1-day;
+  dt.setDate(dt.getDate()+diff); dt.setHours(0,0,0,0); return dt;
+}
+const today=new Date();
+const state={
+  view:'month', weekMonday:getMonday(today),
+  month:today.getMonth(), year:today.getFullYear(),
+  filter:'all', selectedPartnerId:null, selectedEventId:null,
+};
+
+// ═══════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════
+const loadEvents=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch{return[];}};
+const saveEvents=evs=>localStorage.setItem(LS_KEY,JSON.stringify(evs));
+const addOrUpdate=ev=>{const evs=loadEvents(),i=evs.findIndex(e=>e.id===ev.id);i>=0?evs[i]=ev:evs.push(ev);saveEvents(evs);};
+const removeEvent=id=>saveEvents(loadEvents().filter(e=>e.id!==id));
+
+// ═══════════════════════════════════════════════════
+// DATE HELPERS
+// ═══════════════════════════════════════════════════
+const dStr=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const addDays=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()+n);return r;};
+const isToday=d=>dStr(d)===dStr(today);
+function fmtWeek(mon){
+  const fri=addDays(mon,4);
+  const fmt=d=>`${d.getDate()} ${MONTH_NAMES[d.getMonth()].slice(0,3)}`;
+  return mon.getMonth()===fri.getMonth()
+    ?`${mon.getDate()}–${fri.getDate()} ${MONTH_NAMES[mon.getMonth()]} ${mon.getFullYear()}`
+    :`${fmt(mon)} – ${fmt(fri)} ${fri.getFullYear()}`;
+}
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const esc=s=>s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';
+const initials=n=>n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+// ═══════════════════════════════════════════════════
+// PARTNER PANEL
+// ═══════════════════════════════════════════════════
+function renderPartnerPanel(pid){
+  const panel=document.getElementById('partnerPanel');
+  const p=PARTNERS[pid];
+  if(!p){panel.classList.add('hidden');return;}
+  panel.classList.remove('hidden');
+
+  const weekDates=Array.from({length:5},(_,i)=>dStr(addDays(state.weekMonday,i)));
+  const evs=loadEvents().filter(e=>e.partnerId===pid&&weekDates.includes(e.date));
+
+  const ch=p.channels;
+  const CHDEFS=[
+    {key:'instagram',icon:'📸',label:'Instagram'},
+    {key:'facebook', icon:'👍',label:'Facebook'},
+    {key:'linkedin', icon:'💼',label:'LinkedIn'},
+    {key:'email',    icon:'📧',label:'Email MKT'},
+    {key:'tiktok',   icon:'🎵',label:'TikTok'},
+    {key:'whatsapp', icon:'💬',label:'WhatsApp'},
+    {key:'speakers', icon:'🎤',label:'Vocería'},
+  ];
+  const extras=[];
+  if(ch.speakerNote) extras.push(`🎤 ${ch.speakerNote}`);
+  if(ch.whatsappNote)extras.push(`💬 ${ch.whatsappNote}`);
+  if(ch.tiktokNote)  extras.push(`🎵 ${ch.tiktokNote}`);
+  if(ch.other)       extras.push(`📌 ${ch.other}`);
+
+  const wevHtml=evs.length
+    ?evs.map(e=>{
+        const d=new Date(e.date+'T12:00:00');
+        const et=EVENT_TYPES[e.type]||{icon:'•',label:e.type};
+        return`<div class="wei" data-evid="${e.id}" style="--p-color:${p.color};--p-bg:${p.bg}">
+          <div class="wei-date">${DAY_NAMES[(d.getDay()+6)%7]}</div>
+          <div><div class="wei-type">${et.icon} ${et.label}</div><div class="wei-title">${esc(e.title)}</div></div>
+        </div>`;
+      }).join('')
+    :`<p class="pp-empty">Sin acciones esta semana</p>`;
+
+  panel.innerHTML=`
+    <div class="pp-header" style="background:${p.color}">
+      <div class="pp-header-top">
+        <div class="pp-type-badge">${p.type==='socio'?'Socio':'Partner'}</div>
+        <button class="pp-close" id="ppClose">✕</button>
+      </div>
+      <div class="pp-name">${p.name}</div>
+    </div>
+
+    <div class="pp-section">
+      <div class="pp-section-title">Canales disponibles</div>
+      <div class="channels-grid" style="--p-color:${p.color};--p-bg:${p.bg}">
+        ${CHDEFS.map(cd=>`<div class="channel-item ${ch[cd.key]?'on':''}">
+          <span class="channel-icon">${cd.icon}</span>
+          <span class="channel-label">${cd.label}</span>
+        </div>`).join('')}
+      </div>
+      ${extras.length?`<div class="channel-extra">${extras.map(x=>`<div>${x}</div>`).join('')}</div>`:''}
+    </div>
+
+    <div class="pp-section">
+      <div class="pp-section-title">Contactos MKT</div>
+      ${p.mktContacts.length?p.mktContacts.map(c=>`
+        <div class="contact-item">
+          <div class="contact-avatar" style="background:${p.color}">${initials(c.name)}</div>
+          <div class="contact-info">
+            <div class="contact-name">${esc(c.name)}</div>
+            <div class="contact-role">${esc(c.role)}</div>
+            ${c.email?`<div class="contact-email">${esc(c.email)}</div>`:''}
+          </div>
+        </div>`).join(''):`<p class="pp-empty">Sin contactos registrados</p>`}
+    </div>
+
+    <div class="pp-section">
+      <div class="pp-section-title">Soluciones VP</div>
+      ${p.soluciones.length?p.soluciones.map(s=>`
+        <div class="solution-item" style="--p-color:${p.color};--p-bg:${p.bg}">
+          <span class="solution-ruta">${s.ruta}</span>
+          <span>${esc(s.name)}</span>
+        </div>`).join(''):`<p class="pp-empty">—</p>`}
+    </div>
+
+    <div class="pp-section">
+      <div class="pp-section-title">Esta semana</div>
+      ${wevHtml}
+      <button class="pp-add-btn" id="ppAddBtn">+ Agregar acción para ${p.name}</button>
+    </div>`;
+
+  document.getElementById('ppClose').onclick=()=>{
+    panel.classList.add('hidden');state.selectedPartnerId=null;
+    document.querySelectorAll('.event-card').forEach(c=>c.classList.remove('selected'));
+  };
+  document.getElementById('ppAddBtn').onclick=()=>openModal(dStr(state.weekMonday),pid);
+  panel.querySelectorAll('.wei').forEach(el=>el.addEventListener('click',()=>openEditModal(el.dataset.evid)));
+}
+
+// ═══════════════════════════════════════════════════
+// WEEKLY VIEW
+// ═══════════════════════════════════════════════════
+function renderWeekly(){
+  const area=document.getElementById('calendarArea');
+  const evs=loadEvents();
+  const weekDates=Array.from({length:5},(_,i)=>addDays(state.weekMonday,i));
+  const weekStrs=weekDates.map(dStr);
+
+  const eventPids=[...new Set(evs.filter(e=>weekStrs.includes(e.date)&&(state.filter==='all'||e.partnerId===state.filter)).map(e=>e.partnerId))];
+  const summaryHtml=eventPids.length
+    ?`<div class="week-summary"><span class="week-summary-label">Esta semana:</span>
+      ${eventPids.map(pid=>{const p=PARTNERS[pid];return p?`<div class="wsc" style="--p-color:${p.color};--p-bg:${p.bg}"><div class="wsc-dot"></div>${p.name}</div>`:'';}).join('')}
+     </div>`
+    :`<div class="week-summary"><span class="week-summary-label">Sin acciones esta semana — agregá la primera.</span></div>`;
+
+
+  const cols=weekDates.map((date,i)=>{
+    const ds=weekStrs[i];
+    const dayEvs=evs.filter(e=>e.date===ds&&(state.filter==='all'||e.partnerId===state.filter));
+    const isT=isToday(date);
+    const cards=dayEvs.map(ev=>{
+      const p=PARTNERS[ev.partnerId]; if(!p) return'';
+      const et=EVENT_TYPES[ev.type]||{icon:'•',label:ev.type};
+      const sel=state.selectedEventId===ev.id?'selected':'';
+      return`<div class="event-card ${sel}" data-id="${ev.id}" data-partner="${ev.partnerId}" style="--p-color:${p.color};--p-bg:${p.bg}">
+        <div class="ec-partner"><div class="ec-dot"></div><span class="ec-partner-name">${p.name}</span><span class="ec-type">${et.icon} ${et.label}</span></div>
+        <div class="ec-title">${esc(ev.title)}</div>
+      </div>`;
+    }).join('');
+    return`<div class="day-col">
+      <div class="day-header">
+        <div class="day-name">${DAY_NAMES[i]}</div>
+        <div class="day-num-wrap ${isT?'today':''}"><div class="day-num">${date.getDate()}</div></div>
+      </div>
+      ${cards}
+      <button class="day-add-btn" data-date="${ds}">+ Agregar</button>
+    </div>`;
+  }).join('');
+
+  // Plan marks from Planif. General
+  const planRaw=getWeekPlanPids(state.weekMonday);
+  const planFiltered=state.filter==='all'?planRaw:planRaw.filter(p=>p===state.filter);
+  const planBarHtml=planFiltered.length
+    ?`<div class="plan-bar">
+        <span class="plan-bar-label">Planif. General</span>
+        ${planFiltered.map(pid=>{const p=PARTNERS[pid];return p?`<div class="plan-chip" style="--p-color:${p.color};--p-bg:${p.bg}"><div class="plan-chip-dot"></div>${p.name}</div>`:'';}).join('')}
+      </div>`
+    :'';
+
+  area.innerHTML=summaryHtml+planBarHtml+`<div class="week-grid">${cols}</div>`;
+
+  area.querySelectorAll('.event-card').forEach(card=>{
+    card.addEventListener('click',()=>{
+      const pid=card.dataset.partner; state.selectedPartnerId=pid; state.selectedEventId=card.dataset.id;
+      document.querySelectorAll('.event-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected'); renderPartnerPanel(pid);
+    });
+    card.addEventListener('dblclick',()=>openEditModal(card.dataset.id));
+  });
+  area.querySelectorAll('.day-add-btn').forEach(btn=>btn.addEventListener('click',()=>openModal(btn.dataset.date)));
+}
+
+// ═══════════════════════════════════════════════════
+// MONTHLY VIEW
+// ═══════════════════════════════════════════════════
+function renderMonthly(){
+  const area=document.getElementById('calendarArea');
+  const {year,month}=state;
+  const evs=loadEvents();
+
+  // Lunes de la semana que contiene el día 1 del mes
+  const firstOfMonth=new Date(year,month,1);
+  const lastOfMonth=new Date(year,month+1,0);
+  const startMon=getMonday(firstOfMonth);
+  const endMon=getMonday(lastOfMonth);
+
+  const headers=DAY_NAMES.map(d=>`<div class="month-day-label">${d}</div>`).join('');
+
+  let rows='';
+  let cur=new Date(startMon);
+
+  while(cur<=endMon){
+    let cells='';
+    const weekMon=new Date(cur);
+    const weekPlanPids=(()=>{const raw=getWeekPlanPids(weekMon);return state.filter==='all'?raw:raw.filter(p=>p===state.filter);})();
+
+    for(let i=0;i<5;i++){
+      const ds=dStr(cur);
+      const isCurrentMonth=cur.getMonth()===month;
+      const isT=ds===dStr(today);
+      const dayEvs=evs.filter(e=>e.date===ds&&(state.filter==='all'||e.partnerId===state.filter));
+
+      const pills=dayEvs.slice(0,3).map(ev=>{
+        const p=PARTNERS[ev.partnerId];if(!p)return'';
+        const et=EVENT_TYPES[ev.type]||{icon:'•'};
+        return`<div class="month-pill" data-id="${ev.id}" data-partner="${ev.partnerId}" style="--p-color:${p.color};--p-bg:${p.bg}">${et.icon} ${esc(ev.title)}</div>`;
+      }).join('');
+      const more=dayEvs.length>3?`<div class="month-more">+${dayEvs.length-3} más</div>`:'';
+
+      let planPills='';
+      if(i===0 && isCurrentMonth && weekPlanPids.length){
+        planPills=weekPlanPids.slice(0,4).map(pid=>{
+          const p=PARTNERS[pid];if(!p)return'';
+          return`<div class="month-pill month-pill-plan" style="--p-color:${p.color};--p-bg:${p.bg}">${p.name}</div>`;
+        }).join('');
+        if(weekPlanPids.length>4) planPills+=`<div class="month-more">+${weekPlanPids.length-4} planif.</div>`;
+      }
+
+      cells+=`<div class="month-cell ${isT?'today':''} ${!isCurrentMonth?'other-month':''}" data-date="${ds}">
+        <div class="month-cell-num">${cur.getDate()}</div>${pills}${more}${planPills}
+      </div>`;
+      cur=addDays(cur,1);
+    }
+    cur=addDays(cur,2); // saltar fin de semana
+    rows+=`<div class="week-row">${cells}</div>`;
+  }
+
+  area.innerHTML=`<div class="month-wrap">
+    <div class="month-header-row">${headers}</div>
+    <div class="month-body">${rows}</div>
+  </div>`;
+
+  area.querySelectorAll('.month-pill').forEach(pill=>{
+    pill.addEventListener('click',e=>{e.stopPropagation();state.selectedPartnerId=pill.dataset.partner;renderPartnerPanel(pill.dataset.partner);});
+    pill.addEventListener('dblclick',e=>{e.stopPropagation();openEditModal(pill.dataset.id);});
+  });
+  area.querySelectorAll('.month-cell').forEach(cell=>{
+    cell.addEventListener('click',()=>{if(cell.dataset.date&&!cell.classList.contains('other-month'))openModal(cell.dataset.date);});
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function updateTitle(){
+  const el=document.getElementById('periodTitle');
+  el.textContent=state.view==='week'?fmtWeek(state.weekMonday):`${MONTH_NAMES[state.month]} ${state.year}`;
+}
+function render(){
+  updateTitle();
+  const area=document.getElementById('calendarArea');
+  if(state.view==='week'){
+    area.classList.remove('month-view');
+    renderWeekly();
+  } else {
+    area.classList.add('month-view');
+    renderMonthly();
+  }
+  if(state.selectedPartnerId) renderPartnerPanel(state.selectedPartnerId);
+}
+
+// ═══════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════
+function buildFilters(){
+  document.getElementById('filterSocios').innerHTML=SOCIOS.map(p=>
+    `<button class="filter-pill" data-id="${p.id}" style="border-color:${p.color};color:${p.color}">${p.name}</button>`).join('');
+  document.getElementById('filterPartners').innerHTML=PLIST.map(p=>
+    `<button class="filter-pill" data-id="${p.id}" style="border-color:${p.color};color:${p.color}">${p.name}</button>`).join('');
+
+  document.querySelectorAll('.filter-pill').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.filter-pill').forEach(b=>{
+        b.classList.remove('active'); b.style.background=''; b.style.color=b.style.borderColor||'#374151';
+      });
+      btn.classList.add('active');
+      const id=btn.dataset.id;
+      if(id==='all'){btn.style.background='#374151';btn.style.color='white';}
+      else{const p=PARTNERS[id];btn.style.background=p.color;btn.style.color='white';}
+      state.filter=id;
+      if(id!=='all'){state.selectedPartnerId=id;renderPartnerPanel(id);}
+      else{document.getElementById('partnerPanel').classList.add('hidden');state.selectedPartnerId=null;}
+      render();
+    });
+  });
+  const allBtn=document.querySelector('.filter-pill[data-id="all"]');
+  if(allBtn){allBtn.style.background='#374151';allBtn.style.color='white';}
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════
+let _editId=null;
+
+function buildPSG(selId){
+  const g=document.getElementById('partnerSelectGrid');
+  g.innerHTML=Object.values(PARTNERS).map(p=>`
+    <div class="pso ${selId===p.id?'selected':''}" data-pid="${p.id}" style="--p-color:${p.color};--p-bg:${p.bg}">
+      <div class="pso-dot" style="background:${p.color}"></div>
+      <div><div class="pso-name">${p.name}</div><div class="pso-type">${p.type==='socio'?'Socio':'Partner'}</div></div>
+    </div>`).join('');
+  g.querySelectorAll('.pso').forEach(o=>o.addEventListener('click',()=>{
+    g.querySelectorAll('.pso').forEach(x=>x.classList.remove('selected')); o.classList.add('selected');
+  }));
+}
+function buildTC(sel){
+  const w=document.getElementById('typeChips');
+  w.innerHTML=Object.entries(EVENT_TYPES).map(([k,v])=>
+    `<button class="type-chip ${sel===k?'selected':''}" data-type="${k}" type="button">${v.icon} ${v.label}</button>`).join('');
+  w.querySelectorAll('.type-chip').forEach(b=>b.addEventListener('click',()=>{
+    w.querySelectorAll('.type-chip').forEach(x=>x.classList.remove('selected')); b.classList.add('selected');
+  }));
+}
+function openModal(defDate, defPid){
+  _editId=null;
+  document.getElementById('modalTitle').textContent='Nueva acción';
+  document.getElementById('fieldDate').value=defDate||dStr(today);
+  document.getElementById('fieldTitle').value='';
+  document.getElementById('fieldDesc').value='';
+  document.getElementById('deleteBtn').classList.add('hidden');
+  buildPSG(defPid||state.selectedPartnerId||'');
+  buildTC('reunion');
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function openEditModal(eid){
+  const ev=loadEvents().find(e=>e.id===eid); if(!ev) return;
+  _editId=eid;
+  document.getElementById('modalTitle').textContent='Editar acción';
+  document.getElementById('fieldDate').value=ev.date;
+  document.getElementById('fieldTitle').value=ev.title;
+  document.getElementById('fieldDesc').value=ev.description||'';
+  document.getElementById('deleteBtn').classList.remove('hidden');
+  buildPSG(ev.partnerId); buildTC(ev.type);
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.add('hidden');}
+
+// ═══════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════
+function attachListeners(){
+  document.getElementById('weekBtn').addEventListener('click',()=>{
+    state.view='week';
+    document.getElementById('weekBtn').classList.add('active');
+    document.getElementById('monthBtn').classList.remove('active');
+    render();
+  });
+  document.getElementById('monthBtn').addEventListener('click',()=>{
+    state.view='month';
+    document.getElementById('monthBtn').classList.add('active');
+    document.getElementById('weekBtn').classList.remove('active');
+    render();
+  });
+  document.getElementById('prevBtn').addEventListener('click',()=>{
+    if(state.view==='week') state.weekMonday=addDays(state.weekMonday,-7);
+    else{state.month--;if(state.month<0){state.month=11;state.year--;}}
+    render();
+  });
+  document.getElementById('nextBtn').addEventListener('click',()=>{
+    if(state.view==='week') state.weekMonday=addDays(state.weekMonday,7);
+    else{state.month++;if(state.month>11){state.month=0;state.year++;}}
+    render();
+  });
+  document.getElementById('addEventBtn').addEventListener('click',()=>openModal());
+  document.getElementById('cancelBtn').addEventListener('click',closeModal);
+  document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+  document.getElementById('saveBtn').addEventListener('click',()=>{
+    const pid=document.querySelector('.pso.selected')?.dataset.pid;
+    const type=document.querySelector('.type-chip.selected')?.dataset.type;
+    const date=document.getElementById('fieldDate').value;
+    const title=document.getElementById('fieldTitle').value.trim();
+    const description=document.getElementById('fieldDesc').value.trim();
+    if(!pid){alert('Selecciona un socio o partner.');return;}
+    if(!type){alert('Selecciona un tipo de acción.');return;}
+    if(!title){alert('Escribe un título.');return;}
+    if(!date){alert('Selecciona una fecha.');return;}
+    const ev={id:_editId||uid(),partnerId:pid,type,date,title,description,createdAt:new Date().toISOString()};
+    addOrUpdate(ev);
+    state.selectedPartnerId=pid;
+    closeModal();
+    render();
+  });
+
+  document.getElementById('deleteBtn').addEventListener('click',()=>{
+    if(!_editId||!confirm('¿Eliminar esta acción?')) return;
+    removeEvent(_editId); _editId=null; closeModal();
+    state.selectedEventId=null; render();
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// SEED — carga el plan real del sheet si está vacío
+// ═══════════════════════════════════════════════════
+function seedIfEmpty(){
+  if(loadEvents().length>0) return;
+  const mk=(id,partnerId,type,date,title)=>({id,partnerId,type,date,title,description:'',createdAt:new Date().toISOString()});
+  const plan=[
+    // ── Semana 1 Jun (Jun 1–7) ─────────────────────
+    mk('p01','defontana','blog',    '2026-06-02','Blog: Defontana — Después de la Operación Renta'),
+
+    // ── Semana 2 Jun (Jun 8–14) ────────────────────
+    mk('p02','otic',     'emailMkt','2026-06-08','Email: Convocatoria Programa Inclusión Financiera'),
+    mk('p03','pymeUC',   'blog',    '2026-06-09','Blog: Mkt Digital para Pymes (Pyme UC)'),
+    mk('p04','defontana','rrss',    '2026-06-10','RRSS: Carrusel Defontana'),
+
+    // ── Semana 3 Jun (Jun 15–21) ───────────────────
+    mk('p05','bci',          'blog',    '2026-06-16','Blog: Cómo manejar más ingresos sin perder el control (BCI)'),
+    mk('p06','bci',          'rrss',    '2026-06-17','RRSS: Carrusel Ruta Capital'),
+    mk('s01','defontana',    'rrss',    '2026-06-18','RRSS: Carrusel Defontana Digital + Contabilidad Gratuita Multigremial'),
+    mk('s02','kalamar',      'rrss',    '2026-06-19','RRSS: Carrusel IA para Pymes (Kalamar + Defontana)'),
+
+    // ── Semana 4 Jun (Jun 22–28) ───────────────────
+    mk('p07','walmart',      'emailMkt','2026-06-22','Email: Convocatoria Walmart Marketplace Ola 1 T1'),
+    mk('p08','blueExpress',  'blog',    '2026-06-23','Blog: Preparación Semanas de Alta Demanda (Blue Express)'),
+    mk('s03','otic',         'rrss',    '2026-06-23','RRSS: Carrusel Diagnóstico Digital Gratuito (OTIC CChC)'),
+    mk('p09','walmart',      'rrss',    '2026-06-24','RRSS: Post colaborativo Walmart — Convocatoria Marketplace'),
+    mk('p10','defontana',    'rrss',    '2026-06-25','RRSS: Testimonio Pyme Defontana — Contabilidad Gratuita'),
+
+    // ── Semana 1 Jul / Día de las Pymes (Jun 29–Jul 5) ← SEMANA ACTUAL
+    mk('p11','walmart',      'emailMkt','2026-06-30','Email: Especial Día de las Pymes — Propuesta de Valor + nueva web'),
+    mk('s04','bci',          'rrss',    '2026-06-30','RRSS: Carrusel Ruta Capital (BCI + Fintegram + Cobranza Online)'),
+    mk('s05','pymeUC',       'rrss',    '2026-07-01','RRSS: Post Curso Pyme UC — Gestión Eficiente del Negocio'),
+    mk('s06','walmart',      'rrss',    '2026-07-02','RRSS: Post Webinar Walmart Marketplace — Vender en Lider.cl'),
+
+    // ── Semana 2 Jul (Jul 6–12) ────────────────────
+    mk('p12','walmart',      'emailMkt','2026-07-07','Email: Convocatoria Walmart Marketplace Ola 1 T2'),
+    mk('s07','bci',          'rrss',    '2026-07-07','RRSS: Video Sebastián Castro, BCI — Origen de Valor Pyme'),
+    mk('s08','blueExpress',  'rrss',    '2026-07-08','RRSS: Video Historias de Pymes — Neocosmética (Blue Express)'),
+    mk('s09','walmart',      'rrss',    '2026-07-09','RRSS: Carrusel Solución Walmart Marketplace'),
+
+    // ── Semana 3 Jul (Jul 13–19) ───────────────────
+    mk('p13','fintegram',    'emailMkt','2026-07-13','Email: Ruta Capital — Scoring Fintegram'),
+    mk('p14','bci',          'blog',    '2026-07-14','Blog: Cómo manejar más ingresos (BCI)'),
+    mk('s10','fintegram',    'rrss',    '2026-07-16','RRSS: Carrusel Fintegram — Soluciones Financieras para Pymes'),
+
+    // ── Semana 4 Jul (Jul 20–26) ───────────────────
+    mk('p15','walmart',      'emailMkt','2026-07-21','Email: Convocatoria Walmart Marketplace Ola 1 T3'),
+    mk('s11','defontana',    'rrss',    '2026-07-21','RRSS: Carrusel Ruta Digitalización'),
+
+    // ── Septiembre S1 ──────────────────────────────
+    mk('p16','buk',          'blog',    '2026-09-07','Blog BUK: Cómo gestionar el pago de aguinaldos de tus trabajadores'),
+
+    // ── Noviembre S4 ───────────────────────────────
+    mk('p17','buk',          'blog',    '2026-11-23','Blog BUK: Guía presupuesto gestión de personas — 5 tips expertos BUK'),
+  ];
+  saveEvents(plan);
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+seedIfEmpty();
+buildFilters();
+attachListeners();
+render();
+</script>
+</body>
+</html>
