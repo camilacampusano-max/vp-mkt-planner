@@ -1217,7 +1217,12 @@ const SHEET_TYPES=['emailMkt','blog','rrss','evento','paidMedia'];
 async function pushEventToSheet(ev){
   if(!ev.partnerId||!ev.type||!ev.date||!ev.title) return;
   if(!SHEET_TYPES.includes(ev.type)) return;
-  try{ await fetch(sheetUrl('write',ev)); }catch(err){console.warn('Push to sheet failed:',err);}
+  try{
+    await fetch(sheetUrl('write',ev));
+    // Marcar como source:'sheet' para que el sync lo limpie si se borra del sheet
+    const evs=loadEvents(), i=evs.findIndex(e=>e.id===ev.id);
+    if(i>=0){evs[i].source='sheet'; saveEvents(evs);}
+  }catch(err){console.warn('Push to sheet failed:',err);}
 }
 async function pushDeleteToSheet(ev){
   if(!ev.partnerId||!ev.type||!ev.date||!ev.title) return;
