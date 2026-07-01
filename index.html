@@ -1219,9 +1219,9 @@ async function pushEventToSheet(ev){
   if(!SHEET_TYPES.includes(ev.type)) return;
   try{
     await fetch(sheetUrl('write',ev));
-    // Marcar como source:'sheet' para que el sync lo limpie si se borra del sheet
-    const evs=loadEvents(), i=evs.findIndex(e=>e.id===ev.id);
-    if(i>=0){evs[i].source='sheet'; saveEvents(evs);}
+    // Borra el local y sincroniza para que vuelva desde el sheet con su ID definitivo
+    removeEvent(ev.id);
+    await syncSheetEvents();
   }catch(err){console.warn('Push to sheet failed:',err);}
 }
 async function pushDeleteToSheet(ev){
