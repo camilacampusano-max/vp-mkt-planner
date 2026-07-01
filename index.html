@@ -1202,20 +1202,19 @@ function seedIfEmpty(){
 // ═══════════════════════════════════════════════════
 // SYNC — lee eventos desde el Google Sheet automáticamente
 // ═══════════════════════════════════════════════════
-const SHEET_API      = 'https://script.google.com/macros/s/AKfycbwL-rTIsnoQIEgIm4y5M4KMaNgOx4g6p6RpIkbIcUPPZ2ipC6cjSoDCIBCWeHQTv7jm/exec?token=vp-sheet-2026';
-const SHEET_API_POST = 'https://script.google.com/macros/s/AKfycbwL-rTIsnoQIEgIm4y5M4KMaNgOx4g6p6RpIkbIcUPPZ2ipC6cjSoDCIBCWeHQTv7jm/exec';
+const SHEET_API = 'https://script.google.com/macros/s/AKfycbwL-rTIsnoQIEgIm4y5M4KMaNgOx4g6p6RpIkbIcUPPZ2ipC6cjSoDCIBCWeHQTv7jm/exec?token=vp-sheet-2026';
 
 async function pushEventToSheet(ev){
   const sheetTypes=['emailMkt','blog','rrss','evento','paidMedia'];
   if(!ev.partnerId||!ev.type||!ev.date||!ev.title) return;
   if(!sheetTypes.includes(ev.type)) return;
   try{
-    await fetch(SHEET_API_POST,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({token:'vp-sheet-2026',partnerId:ev.partnerId,type:ev.type,date:ev.date,title:ev.title})
-    });
+    const url=SHEET_API+'&action=write'
+      +'&partnerId='+encodeURIComponent(ev.partnerId)
+      +'&type='+encodeURIComponent(ev.type)
+      +'&date='+encodeURIComponent(ev.date)
+      +'&title='+encodeURIComponent(ev.title);
+    await fetch(url);
   }catch(err){console.warn('Push to sheet failed:',err);}
 }
 
